@@ -93,11 +93,15 @@ async function run() {
     //use verify admin after verifyToken
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded.email;
-      const user = await userCollection.findOne({ email });
 
-      if (user?.role !== "admin") {
-        return res.status(403).send({ message: "Forbidden access" });
+      // Fetch the user from the database
+      const user = await userCollection.findOne({ email });
+      if (!user || user.role !== "admin") {
+        return res
+          .status(403)
+          .send({ message: "Forbidden: Admin access required" });
       }
+
       next();
     };
 
@@ -112,21 +116,24 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/users/admin/:email", verifyToken, (req, res) => {
-      const email = req.params.email;
+    app.get(
+      "/users/admin/:email",
+      verifyToken,
+      verifyAdmin,
+      async (req, res) => {
+        const email = req.params.email;
 
-      console.log("Decoded JWT email:", req.decoded.email);
-      console.log("Requested email:", email);
+        // Fetch user details for admin access confirmation
+        const user = await userCollection.findOne({ email });
+        if (!user || user.role !== "admin") {
+          return res
+            .status(403)
+            .send({ message: "Forbidden: Admin access required" });
+        }
 
-      if (email !== req.decoded.email) {
-        return res
-          .status(403)
-          .send({ message: "Forbidden: Admin access required" });
+        res.send({ admin: true });
       }
-
-      const isAdmin = email === "admin@gmail.com"; // Example check
-      res.send({ admin: isAdmin });
-    });
+    );
 
     app.post("/users", async (req, res) => {
       const user = req.body;
