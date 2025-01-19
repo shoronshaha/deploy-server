@@ -7,18 +7,19 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 // middleware
 app.use(
-  cors({
-    origin: process.env.CLIENT_BASE_URL,
-    methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "Cache-Control",
-      "Expires",
-      "Pragma",
-    ],
-    credentials: true,
-  })
+  cors()
+  //   {
+  //   origin: process.env.CLIENT_BASE_URL,
+  //   methods: ["GET", "POST", "DELETE", "PUT", "PATCH"],
+  //   allowedHeaders: [
+  //     "Content-Type",
+  //     "Authorization",
+  //     "Cache-Control",
+  //     "Expires",
+  //     "Pragma",
+  //   ],
+  //   credentials: true,
+  // }
 );
 app.use(express.json());
 
