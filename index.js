@@ -109,37 +109,32 @@ async function run() {
 
     // users related api
     app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
-      const result = await userCollection.find().toArray();
-      res.send(result);
+      const users = await userCollection.find().toArray();
+      res.send(users);
     });
 
-    app.get(
-      "/users/admin/:email",
-      verifyToken,
-      verifyAdmin,
-      async (req, res) => {
-        const email = req.params.email;
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const user = await userCollection.findOne({ email });
 
-        // Fetch user details for admin access confirmation
-        const user = await userCollection.findOne({ email });
-        if (!user || user.role !== "admin") {
-          return res
-            .status(403)
-            .send({ message: "Forbidden: Admin access required" });
-        }
-
-        res.send({ admin: true });
+      if (!user) {
+        return res.status(404).send({ message: "User not found" });
       }
-    );
+
+      const isAdmin = user.role === "admin";
+      res.send({ admin: isAdmin });
+    });
 
     app.post("/users", async (req, res) => {
       const user = req.body;
-      const query = { email: user.email };
-      const existingUser = await userCollection.findOne(query);
+      const existingUser = await userCollection.findOne({ email: user.email });
 
       if (existingUser) {
-        return res.send({ message: "user already exists", insertedId: null });
+        return res.send({ message: "User already exists", insertedId: null });
       }
+
+      // Assign default role
+      user.role = user.role || "user";
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
